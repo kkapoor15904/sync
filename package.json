@@ -1,0 +1,36 @@
+{
+    "name": "@kkapoor/sync",
+    "version": "1.2.0",
+    "description": "",
+    "main": "dist/core/index.js",
+    "files": [
+        "dist/"
+    ],
+    "exports": {
+        "./core": {
+            "import": "./dist/core/index.mjs",
+            "require": "./dist/core/index.js"
+        },
+        "./react": {
+            "import": "./dist/react.mjs",
+            "require": "./dist/react.js"
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [],
+    "author": "Krishna Kapoor",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/react": "^19.0.7",
+        "tsup": "^8.3.5",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "react": "^19.0.0"
+    },
+    "scripts": {
+        "build": "tsup"
+    }
+}
