@@ -19,8 +19,10 @@ export function createContextualState<T>({
     () => {}
   );
 
-  const Wrapper = (props: PropsWithChildren) => {
-    const [state, setState] = useState(initial);
+  const Wrapper = (props: PropsWithChildren<{ overrideInitialState?: T }>) => {
+    const [state, setState] = useState(
+      () => props.overrideInitialState ?? initial
+    );
 
     useEffect(() => {
       if (!effect) return;
