@@ -1,51 +1,60 @@
 'use client';
 
 import React, {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    PropsWithChildren,
+    useContext,
+    useEffect,
+    useState,
 } from 'react';
 import { ContextualStateConfig } from './types';
 
 export function createContextualState<T>({
-  key,
-  initial,
-  effect,
+    key,
+    initial,
+    effect,
 }: ContextualStateConfig<T>) {
-  const ctxS = createContext(initial);
-  const ctxSS = createContext<React.Dispatch<React.SetStateAction<T>>>(
-    () => {}
-  );
-
-  const Wrapper = (props: PropsWithChildren<{ overrideInitialState?: T }>) => {
-    const [state, setState] = useState(
-      () => props.overrideInitialState ?? initial
+    const ctxS = createContext(initial);
+    const ctxSS = createContext<React.Dispatch<React.SetStateAction<T>>>(
+        () => {}
     );
 
-    useEffect(() => {
-      if (!effect) return;
+    const Wrapper = (
+        props: PropsWithChildren<{ overrideInitialState?: T }>
+    ) => {
+        const [state, setState] = useState(
+            () => props.overrideInitialState ?? initial
+        );
 
-      const cleanup = effect(setState);
+        useEffect(() => {
+            if (!effect) return;
 
-      return cleanup;
-    }, []);
+            const cleanup = effect(setState);
 
-    return (
-      <ctxS.Provider value={state}>
-        <ctxSS.Provider value={setState}>{props.children}</ctxSS.Provider>
-      </ctxS.Provider>
-    );
-  };
+            return cleanup;
+        }, []);
 
-  Wrapper.displayName = `Synced(${key.charAt(0).toUpperCase() + key.slice(1)})`;
+        return (
+            <ctxS.Provider value={state}>
+                <ctxSS.Provider value={setState}>
+                    {props.children}
+                </ctxSS.Provider>
+            </ctxS.Provider>
+        );
+    };
 
-  const useCtxState = () => useContext(ctxS);
-  const useCtxSetState = () => useContext(ctxSS);
+    Wrapper.displayName = `Synced(${
+        key.charAt(0).toUpperCase() + key.slice(1)
+    })`;
 
-  Wrapper.useSyncedValue = useCtxState;
-  Wrapper.useUpdateSyncedValue = useCtxSetState;
+    const useCtxState = () => useContext(ctxS);
+    const useCtxSetState = () => useContext(ctxSS);
 
-  return Wrapper;
+    Wrapper.useSyncedValue = useCtxState;
+    Wrapper.useUpdateSyncedValue = useCtxSetState;
+    Wrapper.useSync = () => {
+        return [useCtxState(), useCtxSetState()] as const;
+    };
+
+    return Wrapper;
 }
