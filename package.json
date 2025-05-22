@@ -1,40 +1,40 @@
 {
-  "name": "@kkapoor/sync",
-  "version": "1.4.1",
-  "description": "",
-  "main": "dist/core/index.js",
-  "files": [
-    "dist/"
-  ],
-  "exports": {
-    "./core": {
-      "import": "./dist/core/index.mjs",
-      "require": "./dist/core/index.js"
+    "name": "@kkapoor/sync",
+    "version": "1.4.2",
+    "description": "",
+    "main": "dist/core/index.js",
+    "files": [
+        "dist/"
+    ],
+    "exports": {
+        "./core": {
+            "import": "./dist/core/index.mjs",
+            "require": "./dist/core/index.js"
+        },
+        "./react": {
+            "import": "./dist/react.mjs",
+            "require": "./dist/react.js"
+        },
+        "./ctx": {
+            "import": "./dist/ctx.mjs",
+            "require": "./dist/ctx.js"
+        }
     },
-    "./react": {
-      "import": "./dist/react.mjs",
-      "require": "./dist/react.js"
+    "publishConfig": {
+        "access": "public"
     },
-    "./ctx": {
-      "import": "./dist/ctx.mjs",
-      "require": "./dist/ctx.js"
+    "keywords": [],
+    "author": "Krishna Kapoor",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/react": "^19.1.4",
+        "tsup": "^8.4.0",
+        "typescript": "^5.8.3"
+    },
+    "dependencies": {
+        "react": "^19.1.0"
+    },
+    "scripts": {
+        "build": "tsup"
     }
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "keywords": [],
-  "author": "Krishna Kapoor",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/react": "^19.1.4",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.3"
-  },
-  "dependencies": {
-    "react": "^19.1.0"
-  },
-  "scripts": {
-    "build": "tsup"
-  }
 }
