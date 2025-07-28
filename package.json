@@ -1,6 +1,6 @@
 {
     "name": "@kkapoor/sync",
-    "version": "1.5.3-test.0.0.1",
+    "version": "1.6.0",
     "description": "",
     "main": "dist/core/index.js",
     "files": [
