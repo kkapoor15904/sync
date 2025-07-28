@@ -7,7 +7,16 @@ import React, {
     useEffect,
     useState,
 } from 'react';
-import { ContextualStateConfig } from './types';
+
+export type ContextualStateConfig<T> = {
+    key: string;
+    initial: T;
+    effect?: Effect<T>;
+};
+
+export type Effect<T> = (
+    update: React.Dispatch<React.SetStateAction<T>>
+) => () => void | void;
 
 export function createContextualState<T>({
     key,
