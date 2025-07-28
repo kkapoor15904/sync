@@ -1,14 +1,35 @@
-import {
-    GetState,
-    ReadonlySync,
-    StoreSubscribe,
-    SyncConfig,
-    WritableSync,
-} from '../types';
+import { Dispatch, SetStateAction } from 'react';
 import { derivedMemory, storeListenerMemory, storeMemory } from './memory';
+
+export type StoreSubscribe = (onStoreChange: () => void) => () => void;
+
+export interface ReadonlySync<T> {
+    synchronize: StoreSubscribe;
+    getValue: () => T;
+}
+export interface WritableSync<T> extends ReadonlySync<T> {
+    update: Dispatch<SetStateAction<T>>;
+}
+export type ReadableSync<T> = WritableSync<T> | ReadonlySync<T>;
+export interface SyncConfig<T> {
+    key: string;
+    initial: T;
+}
+
+export type SyncWithParams<T> = <P extends string | number>(
+    params: P
+) => WritableSync<T>;
+
+export type GetState<T> = (
+    getSyncedValue: <S>(store: ReadableSync<S>) => S
+) => T;
+
+export type InferSyncState<T> = T extends ReadableSync<infer S> ? S : never;
 
 export function sync<T>(config: SyncConfig<T>): WritableSync<T> {
     const { key, initial } = config;
+
+    if (typeof window === 'undefined') storeMemory.set(key, initial);
 
     if (!storeMemory.has(key)) storeMemory.set(key, initial);
     if (!storeListenerMemory.has(key)) storeListenerMemory.set(key, new Set());
@@ -61,6 +82,7 @@ export function syncWithParams<T>({ key, initial }: SyncConfig<T>) {
         sync({ key: `${key}__${params}`, initial });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function memoize<T extends (...args: any[]) => ReadonlySync<any>>(
     fn: T
 ) {
