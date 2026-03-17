@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { derivedMemory, storeListenerMemory, storeMemory } from './memory';
 
 export type StoreSubscribe = (onStoreChange: () => void) => () => void;
@@ -17,11 +17,11 @@ export interface SyncConfig<T> {
 }
 
 export type SyncWithParams<T> = <P extends string | number>(
-  params: P
+  params: P,
 ) => WritableSync<T>;
 
 export type GetState<T> = (
-  getSyncedValue: <S>(store: ReadableSync<S>) => S
+  getSyncedValue: <S>(store: ReadableSync<S>) => S,
 ) => T;
 
 export type InferSyncState<T> = T extends ReadableSync<infer S> ? S : never;
@@ -83,7 +83,7 @@ function shallowEqual(a: unknown, b: unknown): boolean {
       if (
         !Object.is(
           (a as Record<string, unknown>)[key],
-          (b as Record<string, unknown>)[key]
+          (b as Record<string, unknown>)[key],
         )
       ) {
         return false;
@@ -96,62 +96,40 @@ function shallowEqual(a: unknown, b: unknown): boolean {
 }
 
 export function derive<T>(getState: GetState<T>): ReadonlySync<T> {
-  const subscribers = new Set<() => void>();
-
+  const subscribers = new Set<StoreSubscribe>();
   let cachedValue: T;
   let initialized = false;
-  let depUnsubs: Array<() => void> = [];
-
-  const recompute = (): T => {
-    const nextDeps: ReadableSync<unknown>[] = [];
-
-    const nextValue = getState((store) => {
-      nextDeps.push(store);
-      return store.getValue();
-    });
-
-    depUnsubs.forEach((unsub) => unsub());
-    depUnsubs = nextDeps.map((store) =>
-      store.synchronize(() => {
-        const prev = cachedValue;
-        const value = recompute();
-
-        if (!Object.is(value, prev)) {
-          subscribers.forEach((listener) => listener());
-        }
-      })
-    );
-
-    if (!initialized || !shallowEqual(cachedValue, nextValue)) {
-      cachedValue = nextValue;
-    }
-
-    initialized = true;
-
-    return cachedValue;
-  };
-
-  const ensureInitialized = () => {
-    if (!initialized) recompute();
-  };
 
   return {
     synchronize: (onStoreChange) => {
-      subscribers.add(onStoreChange);
-      ensureInitialized();
+      if (subscribers.size === 0) {
+        const next = getState((store) => {
+          subscribers.add(store.synchronize);
+          return store.getValue();
+        });
+
+        if (!initialized || !shallowEqual(cachedValue, next)) {
+          cachedValue = next;
+        }
+        initialized = true;
+      }
+
+      const unSubFns = [...subscribers].map((sub) => sub(onStoreChange));
 
       return () => {
-        subscribers.delete(onStoreChange);
-
-        if (subscribers.size === 0) {
-          depUnsubs.forEach((unsub) => unsub());
-          depUnsubs = [];
-          initialized = false;
-        }
+        unSubFns.forEach((fn) => fn());
       };
     },
     getValue: () => {
-      ensureInitialized();
+      const next = getState((store) => {
+        subscribers.add(store.synchronize);
+        return store.getValue();
+      });
+
+      if (!initialized || !shallowEqual(cachedValue, next)) {
+        cachedValue = next;
+      }
+      initialized = true;
       return cachedValue;
     },
   };
@@ -164,7 +142,7 @@ export function syncWithParams<T>({ key, initial }: SyncConfig<T>) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function memoize<T extends (...args: any[]) => ReadonlySync<any>>(
-  fn: T
+  fn: T,
 ) {
   return (...params: Parameters<T>) => {
     const uniqueId = params.map((param) => String(param)).join('_');

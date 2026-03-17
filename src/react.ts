@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useSyncExternalStore } from 'react';
-import { ReadableSync, WritableSync } from './core';
+import type { ReadableSync, WritableSync } from './core';
 
 export function useSyncedValue<T>(store: ReadableSync<T>) {
   return useSyncExternalStore(
     store.synchronize,
     store.getValue,
-    store.getValue
+    store.getValue,
   );
 }
 

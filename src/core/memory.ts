@@ -1,4 +1,4 @@
-import { ReadonlySync } from '.';
+import type { ReadonlySync } from '.';
 
 declare global {
   // on the client this will live on window and survive HMR;
@@ -13,20 +13,30 @@ declare global {
 export const storeMemory: Map<string, unknown> =
   typeof window === 'undefined'
     ? new Map()
-    : ((globalThis as typeof globalThis & {
-        __STORE_MEMORY__?: Map<string, unknown>;
-      }).__STORE_MEMORY__ ??= new Map());
+    : ((
+        globalThis as typeof globalThis & {
+          __STORE_MEMORY__?: Map<string, unknown>;
+        }
+      ).__STORE_MEMORY__ ??= new Map());
 
-export const storeListenerMemory: Map<string, Set<() => void>> =
-  typeof window === 'undefined'
-    ? new Map()
-    : ((globalThis as typeof globalThis & {
+export const storeListenerMemory: Map<
+  string,
+  Set<() => void>
+> = typeof window === 'undefined'
+  ? new Map()
+  : ((
+      globalThis as typeof globalThis & {
         __LISTENER_MEMORY__?: Map<string, Set<() => void>>;
-      }).__LISTENER_MEMORY__ ??= new Map());
+      }
+    ).__LISTENER_MEMORY__ ??= new Map());
 
-export const derivedMemory: Map<string, ReadonlySync<unknown>> =
-  typeof window === 'undefined'
-    ? new Map()
-    : ((globalThis as typeof globalThis & {
+export const derivedMemory: Map<
+  string,
+  ReadonlySync<unknown>
+> = typeof window === 'undefined'
+  ? new Map()
+  : ((
+      globalThis as typeof globalThis & {
         __DERIVED_MEMORY__?: Map<string, ReadonlySync<unknown>>;
-      }).__DERIVED_MEMORY__ ??= new Map());
+      }
+    ).__DERIVED_MEMORY__ ??= new Map());
