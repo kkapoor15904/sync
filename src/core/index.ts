@@ -56,22 +56,103 @@ export function sync<T>(config: SyncConfig<T>): WritableSync<T> {
   };
 }
 
+function shallowEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (!Object.is(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  if (
+    a &&
+    b &&
+    typeof a === 'object' &&
+    typeof b === 'object' &&
+    Object.getPrototypeOf(a) === Object.prototype &&
+    Object.getPrototypeOf(b) === Object.prototype
+  ) {
+    const aKeys = Object.keys(a as Record<string, unknown>);
+    const bKeys = Object.keys(b as Record<string, unknown>);
+    if (aKeys.length !== bKeys.length) return false;
+    for (const key of aKeys) {
+      if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      if (
+        !Object.is(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key]
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
 export function derive<T>(getState: GetState<T>): ReadonlySync<T> {
-  const subscribers = new Set<StoreSubscribe>();
+  const subscribers = new Set<() => void>();
+
+  let cachedValue: T;
+  let initialized = false;
+  let depUnsubs: Array<() => void> = [];
+
+  const recompute = (): T => {
+    const nextDeps: ReadableSync<unknown>[] = [];
+
+    const nextValue = getState((store) => {
+      nextDeps.push(store);
+      return store.getValue();
+    });
+
+    depUnsubs.forEach((unsub) => unsub());
+    depUnsubs = nextDeps.map((store) =>
+      store.synchronize(() => {
+        const prev = cachedValue;
+        const value = recompute();
+
+        if (!Object.is(value, prev)) {
+          subscribers.forEach((listener) => listener());
+        }
+      })
+    );
+
+    if (!initialized || !shallowEqual(cachedValue, nextValue)) {
+      cachedValue = nextValue;
+    }
+
+    initialized = true;
+
+    return cachedValue;
+  };
+
+  const ensureInitialized = () => {
+    if (!initialized) recompute();
+  };
 
   return {
     synchronize: (onStoreChange) => {
-      const unSubFns = [...subscribers].map((sub) => sub(onStoreChange));
+      subscribers.add(onStoreChange);
+      ensureInitialized();
 
       return () => {
-        unSubFns.forEach((fn) => fn());
+        subscribers.delete(onStoreChange);
+
+        if (subscribers.size === 0) {
+          depUnsubs.forEach((unsub) => unsub());
+          depUnsubs = [];
+          initialized = false;
+        }
       };
     },
     getValue: () => {
-      return getState((store) => {
-        subscribers.add(store.synchronize);
-        return store.getValue();
-      });
+      ensureInitialized();
+      return cachedValue;
     },
   };
 }

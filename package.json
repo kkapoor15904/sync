@@ -1,6 +1,6 @@
 {
   "name": "@kkapoor/sync",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "",
   "main": "dist/core/index.js",
   "files": [
@@ -27,17 +27,17 @@
   "author": "Krishna Kapoor",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.27.0",
-    "@types/react": "^19.2.4",
-    "eslint": "^9.27.0",
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^16.2.0",
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.0"
+    "globals": "^16.5.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1"
   },
   "dependencies": {
-    "react": "^19.2.0"
+    "react": "^19.2.4"
   },
   "scripts": {
     "build": "tsup"

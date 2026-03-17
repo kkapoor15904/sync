@@ -5,6 +5,7 @@ declare global {
   // on the server it never gets used.
   let __STORE_MEMORY__: Map<string, unknown> | undefined;
   let __LISTENER_MEMORY__: Map<string, Set<() => void>> | undefined;
+  let __DERIVED_MEMORY__: Map<string, ReadonlySync<unknown>> | undefined;
 }
 
 // on the client: reuse the same Map across imports/HMR
@@ -12,13 +13,20 @@ declare global {
 export const storeMemory: Map<string, unknown> =
   typeof window === 'undefined'
     ? new Map()
-    : (globalThis.__STORE_MEMORY__ ??= new Map());
+    : ((globalThis as typeof globalThis & {
+        __STORE_MEMORY__?: Map<string, unknown>;
+      }).__STORE_MEMORY__ ??= new Map());
 
-export const storeListenerMemory: Map<
-  string,
-  Set<() => void>
-> = typeof window === 'undefined'
-  ? new Map()
-  : (globalThis.__LISTENER_MEMORY__ ??= new Map());
+export const storeListenerMemory: Map<string, Set<() => void>> =
+  typeof window === 'undefined'
+    ? new Map()
+    : ((globalThis as typeof globalThis & {
+        __LISTENER_MEMORY__?: Map<string, Set<() => void>>;
+      }).__LISTENER_MEMORY__ ??= new Map());
 
-export const derivedMemory = new Map<string, ReadonlySync<unknown>>();
+export const derivedMemory: Map<string, ReadonlySync<unknown>> =
+  typeof window === 'undefined'
+    ? new Map()
+    : ((globalThis as typeof globalThis & {
+        __DERIVED_MEMORY__?: Map<string, ReadonlySync<unknown>>;
+      }).__DERIVED_MEMORY__ ??= new Map());
